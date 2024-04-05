@@ -1,0 +1,169 @@
+(* I. ===Some definitions=== *)
+
+kt = 300.*8.314/4184
+
+(* reasonable value for R*T at 300K in kcal/mol; rerun everything if this input is changed *)
+
+beta = 1/kt
+
+vol0 = 1660. (* standard volume for 1mol/L *)
+
+(* II. ===Evaluation of the integrals *)
+
+(* ==dihedral terms== *)
+
+(*RRHO*)
+c1all = Integrate[Exp[-b  k0  s^2], {s, -Infinity, Infinity}, 
+  Assumptions -> b > 0 && k0 > 0 && x0 > 0]
+
+
+(*Schroedinger's expression,after variable substitution*)
+c1afullvarsubst = 
+ Integrate[Exp[-b  k0  s^2], {s, -Pi, Pi}, 
+  Assumptions -> b > 0 && k0 > 0]
+
+
+(* ==distance restraint==*)
+
+(*Schroedinger's expression*)
+c2full = 
+ Integrate[x^2  Exp[-b  k0  (x - x0)^2], {x, 0, Infinity}, 
+  Assumptions -> b > 0 && k0 > 0]
+
+(*RRHO*)
+c2rr = x0^2  Integrate[Exp[-b  k0  s^2], {s, -Infinity, Infinity}, 
+   Assumptions -> b > 0 && k0 > 0]
+
+(* ==angle restraint==*)
+
+(*exact-- brute force*)
+c3full = 
+ Integrate[Sin[x]  Exp[-b  k0  (x - x0)^2], {x, 0, Pi}, 
+  Assumptions -> b > 0 && k0 > 0 && x0 > 0]
+
+(*Schroedinger's expression,MMA needs variable subst.*)
+c3all = 
+ Integrate[Sin[s + x0]  Exp[-b  k0  s^2], {s, -Infinity, Infinity}, 
+  Assumptions -> b > 0 && k0 > 0 && x0 > 0]
+
+(*RRHO*)
+c3rr = 
+ Sin[x0]  Integrate[Exp[-b  k0  s^2], {s, -Infinity, Infinity}, 
+   Assumptions -> b > 0 && k0 > 0]
+
+(* III. ===Numerical examples=== *)
+
+(* L1A-5 *)
+
+(*RRHO*)
+-kt  Log[(8  Pi^2  vol0)/((c2rr /. {b -> beta, x0 -> 5.1, 
+        k0 -> 5.})*(c3rr /. {b -> beta, k0 -> 5, 
+        x0 -> 67.5  Degree})*(c3rr /. {b -> beta, k0 -> 5, 
+        x0 -> 84.5  Degree})*(c1all /. {b -> beta, 
+        k0 -> 2.5})*(c1all /. {b -> beta, 
+        k0 -> 2.5})*(c1all /. {b -> beta, k0 -> 2.5}))]
+
+(*Schroedinger*)
+-kt  Log[(8  Pi^2  vol0)/((c2full /. {b -> beta, 
+        x0 -> 5.1, k0 -> 5.})*(c3all /. {b -> beta, k0 -> 5., 
+        x0 -> 67.5  Degree})*(c3all /. {b -> beta, k0 -> 5., 
+        x0 -> 84.5  Degree})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 2.5})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 2.5})*(c1afullvarsubst /. {b -> beta, k0 -> 2.5}))]
+
+(*fully exact*)
+
+(* Note: the analytical expression by Mma has spurious imaginary 
+components; hence, the use of Re[]. For the justification (i.e., the
+result is purely real, see SI of the manuscript ) *)
+
+-kt  Log[(8  Pi^2  vol0)/((c2full /. {b -> beta, x0 -> 5.1, 
+        k0 -> 5.})*(Re[
+       c3full /. {b -> beta, k0 -> 5., x0 -> 67.5  Degree}])*(Re[
+       c3full /. {b -> beta, k0 -> 5., 
+         x0 -> 84.5  Degree}])*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 2.5})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 2.5})*(c1afullvarsubst /. {b -> beta, k0 -> 2.5}))]
+
+(* L1A-5F *)
+
+(*RRHO*)
+-kt  Log[(8  Pi^2  vol0)/((c2rr /. {b -> beta, x0 -> 5.1, 
+        k0 -> 4.})*(c3rr /. {b -> beta, k0 -> 8, 
+        x0 -> 67.5  Degree})*(c3rr /. {b -> beta, k0 -> 8, 
+        x0 -> 84.5  Degree})*(c1all /. {b -> beta, 
+        k0 -> 5})*(c1all /. {b -> beta, 
+        k0 -> 5})*(c1all /. {b -> beta, k0 -> 5}))]
+
+(*Schroedinger*)
+-kt  Log[(8  Pi^2  vol0)/((c2full /. {b -> beta, 
+        x0 -> 5.1, k0 -> 4.})*(c3all /. {b -> beta, k0 -> 8., 
+        x0 -> 67.5  Degree})*(c3all /. {b -> beta, k0 -> 8., 
+        x0 -> 84.5  Degree})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 5})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 5})*(c1afullvarsubst /. {b -> beta, k0 -> 5}))]
+
+(*fully exact*)
+
+-kt  Log[(8  Pi^2  vol0)/((c2full /. {b -> beta, x0 -> 5.1, 
+        k0 -> 4.})*(Re[
+       c3full /. {b -> beta, k0 -> 8., x0 -> 67.5  Degree}])*(Re[
+       c3full /. {b -> beta, k0 -> 8., 
+         x0 -> 84.5  Degree}])*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 5})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 5})*(c1afullvarsubst /. {b -> beta, k0 -> 5}))]
+
+(* ==The EXTR example== *)
+
+(*RRHO*)
+-kt  Log[(8  Pi^2  vol0)/((c2rr /. {b -> beta, x0 -> 3., 
+        k0 -> 1.})*(c3rr /. {b -> beta, k0 -> 1., 
+        x0 -> 22.5  Degree})*(c3rr /. {b -> beta, k0 -> 1., 
+        x0 -> (180 - 22.5)  Degree})*(c1all /. {b -> beta, 
+        k0 -> 1.})*(c1all /. {b -> beta, 
+        k0 -> 1.})*(c1all /. {b -> beta, k0 -> 1.}))]
+
+(*Schroedinger*)
+-kt  Log[(8  Pi^2  vol0)/((c2full /. {b -> beta, 
+        x0 -> 3., k0 -> 1.})*(c3all /. {b -> beta, k0 -> 1., 
+        x0 -> 22.5  Degree})*(c3all /. {b -> beta, k0 -> 1., 
+        x0 -> (180 - 22.5)  Degree})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 1.})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 1.})*(c1afullvarsubst /. {b -> beta, k0 -> 1.}))]
+
+(*and fully exact*)
+-kt  Log[(8  Pi^2  vol0)/((c2full /. {b -> beta, 
+        x0 -> 3., k0 -> 1.})*(Re[
+       c3full /. {b -> beta, k0 -> 1., x0 -> 22.5  Degree}])*(Re[
+       c3full /. {b -> beta, k0 -> 1., 
+         x0 -> (180 - 22.5)  Degree}])*(c1afullvarsubst /. {b -> beta,
+         k0 -> 1.})*(c1afullvarsubst /. {b -> beta, 
+        k0 -> 1.})*(c1afullvarsubst /. {b -> beta, k0 -> 1.}))]
+
+(* using numerical integration throughout *)
+-kt  Log[(8  Pi^2  vol0)/
+   ((NIntegrate[
+       x^2  Exp[-b  k0  (x - x0)^2] /. {b -> beta, x0 -> 3., 
+         k0 -> 1.}, {x, 0, Infinity}])*
+     NIntegrate[
+      Sin[x]  Exp[-b  k0  (x - x0)^2] /. {b -> beta, k0 -> 1., 
+        x0 -> 22.5  Degree}, {x, 0, Pi}]*
+     NIntegrate[
+      Sin[x]  Exp[-b  k0  (x - x0)^2] /. {b -> beta, k0 -> 1., 
+        x0 -> (180 - 22.5)  Degree}, {x, 0, Pi}]*
+     NIntegrate[
+      Exp[-b  k0  s^2] /. {b -> beta, k0 -> 1.}, {s, -Pi, Pi}]*
+     NIntegrate[
+      Exp[-b  k0  s^2] /. {b -> beta, k0 -> 1.}, {s, -Pi, Pi}]*
+     NIntegrate[
+      Exp[-b  k0  s^2] /. {b -> beta, k0 -> 1.}, {s, -Pi, Pi}])]
+
+(* Taking one of the angle integrals; difference between analytical \
+results and numerical integration *)
+
+(Re[c3full /. {b -> beta, k0 -> 1., x0 -> 22.5  Degree}]) - 
+ NIntegrate[
+  Sin[x]  Exp[-b  k0  (x - x0)^2] /. {b -> beta, k0 -> 1., 
+    x0 -> 22.5  Degree}, {x, 0, Pi}]
+
+(* Note: the resulting value is close to machine epsilon *)
